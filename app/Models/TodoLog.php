@@ -14,7 +14,6 @@ class TodoLog extends Model
     protected $dateFormat = 'U';
     protected $casts = [
         'created_at' => 'timestamp',
-        'updated_at' => 'timestamp',
         'deleted_at' => 'timestamp'
     ];
 
