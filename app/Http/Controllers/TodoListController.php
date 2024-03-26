@@ -8,12 +8,13 @@ use App\Http\Requests\TodoListRequest;
 use App\Http\Resources\TodoListResource;
 use App\Models\TodoList;
 use App\Models\TodoLog;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 class TodoListController extends Controller
 {
+    private string $resource;
+
     public function __construct(private TodoListRepo $repository)
     {
         $this->resource = TodoListResource::class;
@@ -27,7 +28,7 @@ class TodoListController extends Controller
         $list = $this->repository->getList();
 
         return response()->json([
-            'message' => __('todo_list'),
+            'message' => __('message.todo_list'),
             'data' => $list ? $this->resource::collection($list) : null,
         ], Response::HTTP_OK);
     }
@@ -38,7 +39,7 @@ class TodoListController extends Controller
     public function store(TodoListRequest $request)
     {
         $data = $request->all();
-        $msg = __('fail_register_operation');
+        $msg = __('message.fail_register_operation');
         $res = Response::HTTP_NOT_IMPLEMENTED;
 
         DB::beginTransaction();
@@ -50,7 +51,7 @@ class TodoListController extends Controller
             $log->state = TodoStates::TODO->value;
             $log->save();
 
-            $msg = __('success_register_operation');
+            $msg = __('message.success_register_operation');
             $data = new $this->resource($todo);
             $res = Response::HTTP_CREATED;
 
@@ -73,7 +74,7 @@ class TodoListController extends Controller
         $todo = $this->repository->getById($id);
 
         return response()->json([
-            'message' => $todo ? __('field_data') : __('not_found'),
+            'message' => $todo ? __('message.todo_data') : __('message.not_found'),
             'data' => $todo ? new $this->resource($todo) : null
         ], $todo ? Response::HTTP_OK : Response::HTTP_NOT_FOUND);
     }
@@ -84,13 +85,13 @@ class TodoListController extends Controller
     public function update(TodoListRequest $request, string $id)
     {
         $data = $request->all();
-        $msg = __('fail_edit_operation');
+        $msg = __('message.fail_edit_operation');
         $res = Response::HTTP_NOT_IMPLEMENTED;
 
         $todo = $this->repository->getById($id);
 
         if ($todo && $todo->update($data)) {
-            $msg = __('success_edit_operation');
+            $msg = __('message.success_edit_operation');
             $data = new $this->resource($todo);
             $res = Response::HTTP_OK;
         }
@@ -108,11 +109,11 @@ class TodoListController extends Controller
     {
         $todo = $this->repository->getById($id);
 
-        $msg = __('bad_request');
+        $msg = __('message.bad_request');
         $res = Response::HTTP_NOT_FOUND;
 
         if ($todo && $todo->delete()) {
-            $msg = __('success_delete_operation');
+            $msg = __('message.success_delete_operation');
             $res = Response::HTTP_OK;
         }
 
@@ -129,7 +130,7 @@ class TodoListController extends Controller
     {
         $todo = $this->repository->getById($id);
 
-        $msg = __('fail_change_state_operation');
+        $msg = __('message.fail_change_state_operation');
         $res = Response::HTTP_NOT_FOUND;
 
         if ($todo &&
@@ -141,7 +142,7 @@ class TodoListController extends Controller
             $log->state = $state;
             if ($log->save()) {
                 $todo = $this->repository->getById($id);
-                $msg = __('success_change_state_operation');
+                $msg = __('message.success_change_state_operation');
                 $res = Response::HTTP_OK;
             }
         }

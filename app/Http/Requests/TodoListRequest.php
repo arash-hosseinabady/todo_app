@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Support\Facades\Auth;
+
 class TodoListRequest extends CustomRequest
 {
     /**
@@ -9,7 +11,7 @@ class TodoListRequest extends CustomRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return Auth::check();
     }
 
     /**
@@ -23,5 +25,14 @@ class TodoListRequest extends CustomRequest
             'title' => 'required|string|max:255',
             'desc' => 'nullable|string|max:1024',
         ];
+    }
+
+    public function prepareForValidation()
+    {
+        if (request()->getMethod() === 'POST') {
+            $this->merge([
+                'user_id' => auth()->id(),
+            ]);
+        }
     }
 }
