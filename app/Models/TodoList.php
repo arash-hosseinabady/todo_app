@@ -35,4 +35,8 @@ class TodoList extends Model
             ->orderBy('id', 'desc');
     }
 
+    public function user()
+    {
+        return $this->hasOne(User::class, 'id', 'user_id');
+    }
 }

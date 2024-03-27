@@ -20,6 +20,7 @@ class TodoListResource extends JsonResource
             'title' => $this->title,
             'desc' => $this->desc,
             'state' => TodoStates::getValues()[$this->lastLog->state] ?? null,
+            'user' => $this->user->name,
             'created_at' => date('Y-m-d H:i:s', $this->created_at),
         ];
     }

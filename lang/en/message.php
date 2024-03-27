@@ -11,8 +11,6 @@ return [
     'success_delete_operation' => 'The desired record has been successfully deleted.',
     'fail_change_state_operation' => 'The operation to change state of TODO encountered an error!',
     'success_change_state_operation' => 'The operation to change state of TODO was successful.',
-    'success_login' => 'Success login',
-    'success_log_out' => 'Success log out',
     'not_found' => 'The desired record was not found!',
     'bad_request' => 'Bad request!',
 ];

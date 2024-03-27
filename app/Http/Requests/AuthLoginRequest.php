@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-class AuthRegisterRequest extends CustomRequest
+class AuthLoginRequest extends CustomRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,10 +22,8 @@ class AuthRegisterRequest extends CustomRequest
     public function rules()
     {
         return [
-            'name' => 'required|string|min:3|max:32',
-            'email' => 'required|email|unique:users',
+            'email' => 'required|email',
             'password' => 'required|min:8|max:16',
-            'password_confirm' => 'required|same:password',
         ];
     }
 }
