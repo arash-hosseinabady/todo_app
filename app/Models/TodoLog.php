@@ -12,9 +12,10 @@ class TodoLog extends Model
 
     protected $table = 'todo_logs';
     protected $dateFormat = 'U';
+    const UPDATED_AT = null;
     protected $casts = [
         'created_at' => 'timestamp',
-        'deleted_at' => 'timestamp'
+        'deleted_at' => 'timestamp',
     ];
 
     protected $fillable = [

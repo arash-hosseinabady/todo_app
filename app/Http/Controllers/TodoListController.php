@@ -9,6 +9,7 @@ use App\Http\Resources\TodoListResource;
 use App\Models\TodoList;
 use App\Models\TodoLog;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 use Symfony\Component\HttpFoundation\Response;
 
 class TodoListController extends Controller
@@ -44,6 +45,7 @@ class TodoListController extends Controller
 
         DB::beginTransaction();
         try {
+            DB::enableQueryLog();
             $todo = TodoList::create($data);
 
             $log = new TodoLog();
@@ -54,6 +56,8 @@ class TodoListController extends Controller
             $msg = __('message.success_register_operation');
             $data = new $this->resource($todo);
             $res = Response::HTTP_CREATED;
+
+            Redis::set('todo_' . $todo->id, $data);
 
             DB::commit();
         } catch (\Exception $e) {
@@ -71,6 +75,7 @@ class TodoListController extends Controller
      */
     public function show(string $id)
     {
+//        $todo = Redis::get('todo_app_database_todo_' . $id);
         $todo = $this->repository->getById($id);
 
         return response()->json([
