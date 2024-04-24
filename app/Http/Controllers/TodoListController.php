@@ -10,6 +10,7 @@ use App\Models\TodoList;
 use App\Models\TodoLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
+use Nette\Utils\Json;
 use Symfony\Component\HttpFoundation\Response;
 
 class TodoListController extends Controller
@@ -57,7 +58,7 @@ class TodoListController extends Controller
             $data = new $this->resource($todo);
             $res = Response::HTTP_CREATED;
 
-            Redis::set('todo_' . $todo->id, $data);
+            Redis::set('todo_' . $todo->id, $todo);
 
             DB::commit();
         } catch (\Exception $e) {
@@ -75,8 +76,7 @@ class TodoListController extends Controller
      */
     public function show(string $id)
     {
-//        $todo = Redis::get('todo_app_database_todo_' . $id);
-        $todo = $this->repository->getById($id);
+        $todo = unserialize(Redis::get('todo_' . $id)) ?: $this->repository->getById($id);
 
         return response()->json([
             'message' => $todo ? __('message.todo_data') : __('message.not_found'),
