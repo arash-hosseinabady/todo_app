@@ -37,12 +37,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('logout', [AuthController::class, 'logout'])->name('auth-logout');
 
-    Route::group(['middleware' => ['permission:per5|per871']], function () {
-        Route::get('/todo-list/{id}', [TodoListController::class, 'show'])->name('todo-list-show');
-    });
-
     Route::post('/todo-list', [TodoListController::class, 'store'])->name('todo-list-store');
     Route::put('/todo-list/{id}', [TodoListController::class, 'update'])->name('todo-list-update');
     Route::delete('/todo-list/{id}', [TodoListController::class, 'destroy'])->name('todo-list-destroy');
+    Route::get('/todo-list/{id}', [TodoListController::class, 'show'])->name('todo-list-show');
     Route::put('/todo-list/change-state/{id}/{state}', [TodoListController::class, 'changeState'])->name('todo-list-changeState');
 });
