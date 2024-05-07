@@ -17,7 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->renderable(function (\Spatie\Permission\Exceptions\UnauthorizedException $e, $request) {
+            return response()->json([
+                'message' => __('msg.forbidden'),
+                'data' => null,
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_FORBIDDEN);
+        });
     })
     ->withSingletons([
         Illuminate\Contracts\Console\Kernel::class => App\Console\Kernel::class

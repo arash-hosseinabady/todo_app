@@ -10,7 +10,6 @@ use App\Models\TodoList;
 use App\Models\TodoLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
-use Nette\Utils\Json;
 use Symfony\Component\HttpFoundation\Response;
 
 class TodoListController extends Controller

@@ -18,12 +18,10 @@ class AclSeed extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
         Permission::truncate();
 
-        $permissionNames = config('permission_names');
-
         $dateTime = Carbon::now()->toDateTimeString();
         $guardName = Guard::getDefaultName(static::class);
 
-        $permissions = collect($permissionNames)->flatten()->map(function ($permission) use ($dateTime, $guardName) {
+        $permissions = collect(PERMISSIONS)->flatten()->map(function ($permission) use ($dateTime, $guardName) {
             return [
                 'name' => $permission,
                 'guard_name' => $guardName,

@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class TodoList extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $table = 'todo_lists';
     protected $dateFormat = 'U';
@@ -38,5 +40,11 @@ class TodoList extends Model
     public function user()
     {
         return $this->hasOne(User::class, 'id', 'user_id');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['title', 'desc', 'user_id']);
     }
 }

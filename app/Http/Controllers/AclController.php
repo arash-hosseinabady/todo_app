@@ -5,24 +5,20 @@ namespace App\Http\Controllers;
 use App\Http\Requests\RoleRequest;
 use App\Http\Resources\AclRoleResource;
 use App\Http\Resources\UserResource;
+use App\Models\AclModelHasPermission;
+use App\Models\AclModelHasRole;
+use App\Models\AclRoleHasPermission;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
+use App\Models\AclPermission;
+use App\Models\AclRole;
 
 class AclController extends Controller
 {
     public function permissions()
     {
-        if (!auth()->user()->can(config('permission_names.acl.view'))) {
-            return response()->json([
-                'message' => __('msg.forbidden'),
-                'data' => null
-            ], Response::HTTP_FORBIDDEN);
-        }
-
-        $permissions = Permission::select('id', 'name')->get();
+        $permissions = AclPermission::select('id', 'name')->get();
         return response()->json([
             'message' => __('acl.list_permission'),
             'data' => $permissions
@@ -31,14 +27,7 @@ class AclController extends Controller
 
     public function roles()
     {
-        if (!auth()->user()->can(config('permission_names.acl.view'))) {
-            return response()->json([
-                'message' => __('msg.forbidden'),
-                'data' => null
-            ], Response::HTTP_FORBIDDEN);
-        }
-
-        $roles = Role::select('id', 'name')->get();
+        $roles = AclRole::select('id', 'name')->get();
         return response()->json([
             'message' => __('acl.list_role'),
             'data' => [
@@ -49,17 +38,10 @@ class AclController extends Controller
 
     public function createRole(RoleRequest $request)
     {
-        if (!auth()->user()->can(config('permission_names.acl.add'))) {
-            return response()->json([
-                'message' => __('msg.forbidden'),
-                'data' => null
-            ], Response::HTTP_FORBIDDEN);
-        }
-
         $msg = __('role.fail_register_role');
         $res = Response::HTTP_NOT_IMPLEMENTED;
 
-        if ($role = Role::create(['name' => $request->all()['name']])) {
+        if ($role = AclRole::create(['name' => $request->all()['name']])) {
             $msg = __('acl.success_register_role');
             $res = Response::HTTP_CREATED;
         }
@@ -76,17 +58,10 @@ class AclController extends Controller
 
     public function editRole(RoleRequest $request, $id)
     {
-        if (!auth()->user()->can(config('permission_names.acl.edit'))) {
-            return response()->json([
-                'message' => __('msg.forbidden'),
-                'data' => null
-            ], Response::HTTP_FORBIDDEN);
-        }
-
         $msg = __('role.fail_edit_role');
         $res = Response::HTTP_NOT_IMPLEMENTED;
 
-        $role = Role::where('id', $id)->first();
+        $role = AclRole::where('id', $id)->first();
         if ($role && $role->update($request->all())) {
             $msg = __('acl.success_edit_role');
             $res = Response::HTTP_OK;
@@ -104,17 +79,10 @@ class AclController extends Controller
 
     public function deleteRole($id)
     {
-        if (!auth()->user()->can(config('permission_names.acl.delete'))) {
-            return response()->json([
-                'message' => __('msg.forbidden'),
-                'data' => null
-            ], Response::HTTP_FORBIDDEN);
-        }
-
         $msg = __('role.fail_delete_role');
         $res = Response::HTTP_NOT_FOUND;
 
-        $role = Role::where('id', $id)->first();
+        $role = AclRole::where('id', $id)->first();
         if ($role && $role->delete()) {
             $msg = __('acl.success_delete_role');
             $res = Response::HTTP_OK;
@@ -128,17 +96,10 @@ class AclController extends Controller
 
     public function showRole($id)
     {
-        if (!auth()->user()->can(config('permission_names.acl.view'))) {
-            return response()->json([
-                'message' => __('msg.forbidden'),
-                'data' => null
-            ], Response::HTTP_FORBIDDEN);
-        }
-
         $msg = __('msg.not_found');
         $res = Response::HTTP_NOT_FOUND;
 
-        $role = Role::select('id', 'name')
+        $role = AclRole::select('id', 'name')
             ->where('id', $id)
             ->first();
 
@@ -155,13 +116,6 @@ class AclController extends Controller
 
     public function permissionsToUser(Request $request, $userId)
     {
-        if (!auth()->user()->can(config('permission_names.acl.permission_to_user'))) {
-            return response()->json([
-                'message' => __('msg.forbidden'),
-                'data' => null
-            ], Response::HTTP_FORBIDDEN);
-        }
-
         $msg = __('acl.bad_request');
         $res = Response::HTTP_NOT_FOUND;
 
@@ -169,8 +123,13 @@ class AclController extends Controller
             ->first();
 
         if ($user) {
-            $permissions = Permission::whereIn('id', $request->all()['permissions'] ?? [])->get() ?? null;
-            $user->syncPermissions($permissions);
+            $permissions = AclPermission::whereIn('id', $request->all()['permissions'] ?? [])->get() ?? null;
+            if ($user->syncPermissions($permissions)) {
+                activity()->performedOn(new AclModelHasPermission())
+                    ->causedBy(auth()->user())
+                    ->withProperties(['attributes' => $permissions->select('id', 'name')->put('user_id', $userId)])
+                    ->log('change permissions of user');
+            }
             $msg = __('acl.success_edit_permissions_to_user');
             $res = Response::HTTP_OK;
         }
@@ -183,22 +142,20 @@ class AclController extends Controller
 
     public function permissionsToRole(Request $request, $roleId)
     {
-        if (!auth()->user()->can(config('permission_names.acl.permission_to_role'))) {
-            return response()->json([
-                'message' => __('msg.forbidden'),
-                'data' => null
-            ], Response::HTTP_FORBIDDEN);
-        }
-
         $msg = __('acl.bad_request');
         $res = Response::HTTP_NOT_FOUND;
 
-        $role = Role::where('id', $roleId)
+        $role = AclRole::where('id', $roleId)
             ->first();
 
         if ($role) {
-            $permissions = Permission::whereIn('id', $request->all()['permissions'] ?? [])->get() ?? null;
-            $role->syncPermissions($permissions);
+            $permissions = AclPermission::whereIn('id', $request->all()['permissions'] ?? [])->get() ?? null;
+            if ($role->syncPermissions($permissions)) {
+                activity()->performedOn(new AclRoleHasPermission())
+                    ->causedBy(auth()->user())
+                    ->withProperties(['attributes' => $permissions->select('id', 'name')->put('role_id', $roleId)])
+                    ->log('change permissions of role');
+            }
             $msg = __('acl.success_edit_permissions_to_role');
             $res = Response::HTTP_OK;
         }
@@ -211,13 +168,6 @@ class AclController extends Controller
 
     public function rolesToUser(Request $request, $userId)
     {
-        if (!auth()->user()->can(config('permission_names.acl.role_to_user'))) {
-            return response()->json([
-                'message' => __('msg.forbidden'),
-                'data' => null
-            ], Response::HTTP_FORBIDDEN);
-        }
-
         $msg = __('acl.bad_request');
         $res = Response::HTTP_NOT_FOUND;
 
@@ -225,8 +175,13 @@ class AclController extends Controller
             ->first();
 
         if ($user) {
-            $roles = Role::whereIn('id', $request->all()['roles'] ?? [])->get() ?? null;
-            $user->syncRoles($roles);
+            $roles = AclRole::whereIn('id', $request->all()['roles'] ?? [])->get() ?? null;
+            if ($user->syncRoles($roles)) {
+                activity()->performedOn(new AclModelHasRole())
+                    ->causedBy(auth()->user())
+                    ->withProperties(['attributes' => $roles->select('id', 'name')->put('user_id', $userId)])
+                    ->log('change roles of user');
+            }
             $msg = __('acl.success_edit_roles_to_user');
             $res = Response::HTTP_OK;
         }
