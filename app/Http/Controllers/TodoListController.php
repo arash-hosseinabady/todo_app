@@ -8,6 +8,7 @@ use App\Http\Requests\TodoListRequest;
 use App\Http\Resources\TodoListResource;
 use App\Models\TodoList;
 use App\Models\TodoLog;
+use App\Notifications\TodoNotify;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Symfony\Component\HttpFoundation\Response;
@@ -56,6 +57,14 @@ class TodoListController extends Controller
             $msg = __('message.success_register_operation');
             $data = new $this->resource($todo);
             $res = Response::HTTP_CREATED;
+
+            auth()->user()->notify(new TodoNotify([
+                'msg' => __('msg.add_todo'),
+                'todo' => [
+                    'title' => $todo->title,
+                    'url' => route('todo-list-show', ['id' => 6], false)
+                ]
+            ]));
 
             Redis::set('todo_' . $todo->id, $todo);
 

@@ -31,7 +31,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
                 ->where('userId', '[0-9]+');
     });
 
-    Route::get('logout', [AuthController::class, 'logout'])->name('auth-logout');
+    Route::prefix('notification')->name('notification.')->group(function () {
+        Route::get('', [AuthController::class, 'notification'])->name('list');
+        Route::get('mark-as-read', [AuthController::class, 'notificationMarkAsRead'])->name('mark-as-read');
+    });
 
     Route::post('/todo-list', [TodoListController::class, 'store'])->name('todo-list-store');
     Route::put('/todo-list/{id}', [TodoListController::class, 'update'])->name('todo-list-update');

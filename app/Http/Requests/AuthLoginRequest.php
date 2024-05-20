@@ -22,7 +22,8 @@ class AuthLoginRequest extends CustomRequest
     public function rules()
     {
         return [
-            'email' => 'required|email',
+            'username' => 'required_without:email',
+            'email' => 'required_without:username',
             'password' => 'required|min:8|max:16',
         ];
     }
